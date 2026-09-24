@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Happy Memories Chat</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #fdfcfb 0%, #e2d1c3 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .chat-container {
+            width: 400px;
+            height: 600px;
+            background: #ffffff;
+            border-radius: 20px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            border: 2px solid #f0e6df;
+        }
+        .chat-header {
+            background: linear-gradient(135deg, #ff7e5f 0%, #feb47b 100%);
+            color: white;
+            padding: 20px;
+            text-align: center;
+            font-size: 1.2rem;
+            font-weight: bold;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        }
+        .chat-header span {
+            font-size: 0.85rem;
+            display: block;
+            font-weight: normal;
+            opacity: 0.9;
+            margin-top: 4px;
+        }
+        .chat-box {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            background: #fffaf5;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .message {
+            max-width: 80%;
+            padding: 12px 16px;
+            border-radius: 15px;
+            font-size: 0.95rem;
+            line-height: 1.4;
+            word-wrap: break-word;
+        }
+        .bot-message {
+            background: #f1f0f0;
+            color: #333;
+            align-self: flex-start;
+            border-bottom-left-radius: 2px;
+            border: 1px solid #e4e2e2;
+        }
+        .user-message {
+            background: linear-gradient(135deg, #ff7e5f 0%, #feb47b 100%);
+            color: white;
+            align-self: flex-end;
+            border-bottom-right-radius: 2px;
+        }
+        .quick-replies {
+            padding: 10px 15px;
+            background: #fff;
+            display: flex;
+            gap: 8px;
+            overflow-x: auto;
+            border-top: 1px solid #f0f0f0;
+        }
+        .pill {
+            background: #fff3ed;
+            color: #e65c00;
+            border: 1px solid #ffd8cc;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: all 0.2s ease;
+        }
+        .pill:hover {
+            background: #ff7e5f;
+            color: white;
+        }
+        .chat-input-area {
+            display: flex;
+            padding: 15px;
+            background: #ffffff;
+            border-top: 1px solid #eee;
+        }
+        input {
+            flex: 1;
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            border-radius: 25px;
+            outline: none;
+            font-size: 0.95rem;
+            transition: border 0.2s;
+        }
+        input:focus {
+            border-color: #ff7e5f;
+        }
+        button {
+            background: linear-gradient(135deg, #ff7e5f 0%, #feb47b 100%);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 42px;
+            height: 42px;
+            margin-left: 8px;
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1rem;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            transition: transform 0.1s;
+        }
+        button:active {
+            transform: scale(0.95);
+        }
+    </style>
+</head>
+<body>
+    <div class="chat-container">
+        <div class="chat-header">
+            ☕ Happy Memories
+            <span>Making every bite a joyful moment! ✨</span>
+        </div>
+        
+        <div class="chat-box" id="chat-box">
+            <div class="message bot-message">Hey there! Welcome to Happy Memories 🥐💛 What can I grab or help you with today?</div>
+        </div>
+
+        <!-- Quick Tap Suggestion Pills -->
+        <div class="quick-replies">
+            <div class="pill" onclick="sendPreset('mains')">🥪 Mains</div>
+            <div class="pill" onclick="sendPreset('drinks')">🥤 Drinks</div>
+            <div class="pill" onclick="sendPreset('desserts')">🍰 Desserts</div>
+            <div class="pill" onclick="sendPreset('dietary')">🌿 Vegan/GF</div>
+            <div class="pill" onclick="sendPreset('wifi')">📶 Wi-Fi & Hours</div>
+        </div>
+
+        <div class="chat-input-area">
+            <input type="text" id="user-input" placeholder="Type a message..." onkeypress="handleKey(event)">
+            <button onclick="sendMessage()">➤</button>
+        </div>
+    </div>
+
+    <script>
+        function sendPreset(text) {
+            document.getElementById('user-input').value = text;
+            sendMessage();
+        }
+
+        function sendMessage() {
+            let msgInput = document.getElementById('user-input');
+            let msg = msgInput.value.trim();
+            if(!msg) return;
+            
+            let chatBox = document.getElementById('chat-box');
+            chatBox.innerHTML += `<div class="message user-message">${msg}</div>`;
+            msgInput.value = '';
+            chatBox.scrollTop = chatBox.scrollHeight;
+            
+            fetch('/chat', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({message: msg})
+            })
+            .then(res => res.json())
+            .then(data => {
+                let formattedReply = data.reply.replace(/\n/g, '<br>');
+                chatBox.innerHTML += `<div class="message bot-message">${formattedReply}</div>`;
+                chatBox.scrollTop = chatBox.scrollHeight;
+            });
+        }
+        function handleKey(e) { if (e.key === 'Enter') sendMessage(); }
+    </script>
+</body>
+</html>
